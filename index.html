@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥛</text></svg>" />
+  <title>Will It Expire? — 3D Interactive Food Freshness & Storage Intelligence</title>
+  <meta name="description" content="Explore an interactive 3D virtual kitchen with USDA FoodKeeper shelf-life intelligence, spoilage checklists, and food waste prevention tracker." />
+</head>
+<body class="bg-obsidian-950 text-slate-100 antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- 1. Fixed WebGL 3D Canvas Background -->
+  <div id="canvas-3d"></div>
+
+  <!-- 2. Floating 3D Annotations Screen Space Overlay -->
+  <div id="annotations-container"></div>
+
+  <!-- 3. Top Sticky Global Navigation Bar -->
+  <header class="fixed top-0 left-0 w-full z-40 bg-obsidian-950/80 backdrop-blur-xl border-b border-white/10 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="#hero-section" class="flex items-center gap-2.5 group focus:outline-none flex-shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-lg shadow-glow-fresh group-hover:scale-105 transition-transform">
+          🥛
+        </div>
+        <div>
+          <span class="text-base font-bold tracking-tight text-white font-display flex items-center gap-1.5">
+            Will It Expire<span class="text-emerald-400">?</span>
+            <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">100+ USDA</span>
+          </span>
+        </div>
+      </a>
+
+      <!-- Quick Search Bar (Center) -->
+      <div class="relative flex-1 max-w-sm hidden lg:block">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <input id="header-search-input" type="text" placeholder="Search 100+ foods (e.g. 'milk', 'salmon', 'avocado')..." class="w-full bg-white/5 border border-white/10 rounded-full pl-9 pr-12 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-emerald-400 focus:bg-white/10 transition-all">
+          <div class="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
+            <kbd class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-slate-400 border border-white/10">Ctrl+K</kbd>
+          </div>
+        </div>
+
+        <!-- Autocomplete Dropdown -->
+        <div id="header-search-dropdown" class="hidden absolute top-full mt-2 left-0 w-full bg-obsidian-900/95 border border-white/15 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden z-50 max-h-80 overflow-y-auto"></div>
+      </div>
+
+      <!-- Navigation & Action Buttons -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        
+        <!-- Browse Database Button -->
+        <button id="open-db-modal-btn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-200 flex items-center gap-1.5 transition-all">
+          <span>📚</span>
+          <span class="hidden md:inline">Database</span>
+        </button>
+
+        <!-- Freshness Calculator Link -->
+        <a href="#calculator-section" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-200 flex items-center gap-1.5 transition-all">
+          <span>⏱️</span>
+          <span class="hidden md:inline">Calculator</span>
+        </a>
+
+        <!-- "Can I Eat This?" Wizard Link -->
+        <a href="#safety-wizard-section" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-amber-300 flex items-center gap-1.5 transition-all">
+          <span>🩺</span>
+          <span class="hidden md:inline">Safety Wizard</span>
+        </a>
+
+        <!-- My Pantry Link -->
+        <a href="#my-pantry-section" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-semibold text-emerald-300 flex items-center gap-1.5 transition-all">
+          <span>🧺</span>
+          <span class="hidden md:inline">My Pantry</span>
+        </a>
+
+        <!-- Sound Toggle Button -->
+        <button id="sound-toggle-btn" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white transition-colors" title="Toggle UI Sound Effects">
+          <span id="sound-icon">🔊</span>
+        </button>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- 4. Floating 3D Camera & Refrigerator Door Control Toolbar (Bottom Center) -->
+  <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30 flex flex-wrap items-center justify-center gap-1.5 p-2 rounded-2xl bg-obsidian-900/95 border border-white/15 backdrop-blur-2xl shadow-2xl max-w-[95vw]">
+    
+    <!-- Zone navigators -->
+    <div class="flex items-center gap-1 border-r border-white/10 pr-2 mr-1 hidden sm:flex">
+      <span class="text-[10px] font-mono uppercase text-slate-400 px-1">View:</span>
+      <button data-zone="hero" class="zone-nav-btn px-2.5 py-1.5 rounded-xl text-xs font-medium bg-emerald-500 text-white shadow-glow-fresh transition-all">
+        🏠 Kitchen
+      </button>
+      <button data-zone="fridge" class="zone-nav-btn px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:bg-white/10 transition-all">
+        🧊 Fridge
+      </button>
+      <button data-zone="pantry" class="zone-nav-btn px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:bg-white/10 transition-all">
+        🥫 Pantry
+      </button>
+      <button data-zone="counter" class="zone-nav-btn px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:bg-white/10 transition-all">
+        🍎 Counter
+      </button>
+    </div>
+
+    <!-- Interactive Fridge & Freezer Actions -->
+    <div class="flex items-center gap-1">
+      <button id="fridge-door-toggle-btn" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 shadow-glow-fridge flex items-center gap-1.5 transition-all active:scale-95">
+        <span>🚪</span> <span id="fridge-door-btn-text">Open Fridge</span>
+      </button>
+
+      <button id="freezer-drawer-toggle-btn" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-500/10 hover:bg-sky-500/20 text-sky-200 border border-sky-500/30 flex items-center gap-1.5 transition-all active:scale-95">
+        <span>❄️</span> <span id="freezer-drawer-btn-text">Open Freezer</span>
+      </button>
+
+      <button id="orbit-mode-toggle" class="px-3 py-1.5 rounded-xl text-xs font-medium border border-white/10 text-slate-300 hover:bg-white/10 transition-all flex items-center gap-1">
+        <span>🔄</span> <span class="hidden sm:inline">360° Orbit</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- 5. Scroll Story Container (Contains Interactive Overlays) -->
+  <main id="scroll-story-container" class="w-full">
+    
+    <!-- Section 1: Hero Panorama -->
+    <section id="hero-section" class="story-section px-4 sm:px-6 pt-20">
+      <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        
+        <div class="lg:col-span-6 story-content-card space-y-6">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-beacon"></span>
+            3D Interactive Food Safety Intelligence
+          </div>
+
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight font-display leading-[1.1]">
+            Know Exactly When Your Food <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400">Expires.</span>
+          </h1>
+
+          <p class="text-base text-slate-300 leading-relaxed max-w-xl">
+            Explore our virtual 3D kitchen loaded with official USDA FoodKeeper guidelines. Click any food in the pantry, fridge, or counter to inspect exact shelf lives, storage tips, and sensory spoilage tests.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-3 pt-2">
+            <button id="hero-explore-btn" class="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-bold uppercase tracking-wider shadow-glow-fresh transition-all flex items-center gap-2 active:scale-98">
+              <span>🔍</span> Click Any 3D Food Item
+            </button>
+            <button id="hero-open-db-btn" class="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2">
+              <span>📚</span> Browse 100+ Foods
+            </button>
+          </div>
+
+          <!-- Quick Micro Cards -->
+          <div class="grid grid-cols-3 gap-3 pt-4 max-w-lg">
+            <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+              <div class="text-xs text-sky-300 font-semibold flex items-center gap-1">🧊 Fridge</div>
+              <div class="text-[11px] text-slate-400 mt-1">35°F – 38°F (1-3°C)</div>
+              <div class="text-[10px] text-slate-500">Stops pathogen growth</div>
+            </div>
+            <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+              <div class="text-xs text-amber-300 font-semibold flex items-center gap-1">🥫 Pantry</div>
+              <div class="text-[11px] text-slate-400 mt-1">50°F – 70°F (10-21°C)</div>
+              <div class="text-[10px] text-slate-500">Cool, dark & dry</div>
+            </div>
+            <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+              <div class="text-xs text-emerald-300 font-semibold flex items-center gap-1">❄️ Freezer</div>
+              <div class="text-[11px] text-slate-400 mt-1">0°F (-18°C)</div>
+              <div class="text-[10px] text-slate-500">Halts spoilage indefinitely</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 text-xs text-slate-400 pt-2 animate-bounce">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+            Scroll down to journey through the kitchen zones
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section 2: Refrigerator Fresh Zone -->
+    <section id="fridge-story-section" class="story-section px-4 sm:px-6">
+      <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        
+        <div class="lg:col-span-5 story-content-card space-y-5 bg-obsidian-900/90 border border-sky-500/20 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-mono">
+            <span>🧊</span> Zone 1: Refrigerator Cold Storage
+          </div>
+
+          <h2 class="text-3xl font-bold text-white font-display">The Cold Science of Temperature Zones</h2>
+          
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Not all fridge shelves are created equal! Warm air rises, making the top shelf (38-40°F) ideal for dairy & leftovers, while the coldest bottom shelf (34-36°F) prevents bacteria multiplication in raw meats.
+          </p>
+
+          <div class="space-y-3 pt-1">
+            <div class="p-3 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+              <span class="text-xl">🥛</span>
+              <div>
+                <div class="text-xs font-bold text-white">Never Store Milk in the Door!</div>
+                <p class="text-[11px] text-slate-400">Opening the fridge exposes door racks to ambient room heat. Always keep milk on middle or back shelves.</p>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+              <span class="text-xl">🥩</span>
+              <div>
+                <div class="text-xs font-bold text-white">Raw Meat & Poultry (Bottom Shelf Only)</div>
+                <p class="text-[11px] text-slate-400">Place ground beef and salmon on a rimmed tray at the lowest point to eliminate cross-contamination dripping.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 flex items-center gap-2">
+            <button data-inspect="milk_whole" class="quick-inspect-pill text-xs px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium transition-colors">
+              🥛 Inspect Milk
+            </button>
+            <button data-inspect="eggs_fresh" class="quick-inspect-pill text-xs px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium transition-colors">
+              🥚 Inspect Eggs
+            </button>
+            <button data-inspect="salmon_fresh" class="quick-inspect-pill text-xs px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium transition-colors">
+              🐟 Salmon
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section 3: Wooden Pantry Dry Zone -->
+    <section id="pantry-story-section" class="story-section px-4 sm:px-6">
+      <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-end">
+        
+        <div class="lg:col-start-8 lg:col-span-5 story-content-card space-y-5 bg-obsidian-900/90 border border-amber-500/20 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono">
+            <span>🥫</span> Zone 2: The Dry Pantry
+          </div>
+
+          <h2 class="text-3xl font-bold text-white font-display">Preserving Pantry Staples & Oils</h2>
+          
+          <p class="text-xs text-slate-300 leading-relaxed">
+            The three mortal enemies of pantry foods are <strong>Heat, Sunlight, and Moisture</strong>. Storing extra virgin olive oil next to your hot stove oxidizes healthy polyphenols into rancid free radicals in weeks.
+          </p>
+
+          <div class="space-y-3 pt-1">
+            <div class="p-3 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+              <span class="text-xl">🍯</span>
+              <div>
+                <div class="text-xs font-bold text-white">Honey Never Truly Spoils</div>
+                <p class="text-[11px] text-slate-400">With less than 18% water content and high acidity (pH 3.9), bacteria cannot survive. Reliquefy white crystals in warm water.</p>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+              <span class="text-xl">🥫</span>
+              <div>
+                <div class="text-xs font-bold text-white">The Danger of Bulging Cans</div>
+                <p class="text-[11px] text-slate-400">Never taste food from a swollen, leaking, or rusted can! Gas indicates lethal <em>Clostridium botulinum</em> growth.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 flex items-center gap-2">
+            <button data-inspect="ketchup_heinz" class="quick-inspect-pill text-xs px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium transition-colors">
+              🍅 Ketchup
+            </button>
+            <button data-inspect="olive_oil_evoo" class="quick-inspect-pill text-xs px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium transition-colors">
+              🫒 Olive Oil
+            </button>
+            <button data-inspect="canned_tuna" class="quick-inspect-pill text-xs px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium transition-colors">
+              🥫 Tuna
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section 4: Date Labels Decoded -->
+    <section id="labels-story-section" class="story-section px-4 sm:px-6">
+      <div class="max-w-4xl mx-auto w-full story-content-card space-y-6 bg-obsidian-900/90 border border-white/15 rounded-3xl p-6 sm:p-10 backdrop-blur-xl shadow-2xl">
+        
+        <div class="text-center space-y-2">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono">
+            <span>🏷️</span> Food Science Truths
+          </div>
+          <h2 class="text-3xl font-bold text-white font-display">Demystifying Date Labels: Safety vs. Quality</h2>
+          <p class="text-xs text-slate-300 max-w-xl mx-auto">
+            In the United States, federal law does not require expiration dates (except infant formula). Most printed dates describe peak culinary quality, not microbial danger.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+          
+          <div class="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/20 space-y-2">
+            <div class="text-xs font-bold font-mono text-emerald-400 uppercase tracking-wider">"Best If Used By"</div>
+            <div class="text-sm font-semibold text-white">Peak Quality Guideline</div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Indicates when product will have best flavor or texture. It is NOT an indicator of food safety. Safe to consume after this date if stored properly.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-rose-950/30 border border-rose-500/20 space-y-2">
+            <div class="text-xs font-bold font-mono text-rose-400 uppercase tracking-wider">"Use By"</div>
+            <div class="text-sm font-semibold text-white">Safety Deadline</div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              The last date recommended for use of the product while at peak quality and safety. For perishables (deli meat, raw chicken), discard after this date.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-sky-950/30 border border-sky-500/20 space-y-2">
+            <div class="text-xs font-bold font-mono text-sky-400 uppercase tracking-wider">"Freeze By"</div>
+            <div class="text-sm font-semibold text-white">Preservation Action</div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Transfer to freezer before this date to prevent quality deterioration. Freezing puts microbial activity into a complete suspended state.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Sensory Test Callout -->
+        <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">👀 👃 ✋</span>
+            <div>
+              <div class="text-xs font-bold text-white">Trust Your Senses Before Tossing Food</div>
+              <div class="text-[11px] text-slate-400">Look for discoloration/mold • Smell for sour/ammonia odors • Feel for slime or stickiness.</div>
+            </div>
+          </div>
+          <a href="#calculator-section" class="whitespace-nowrap px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold shadow-glow-fresh transition-all">
+            Test Freshness Calculator &rarr;
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section 5: Interactive Freshness Calculator -->
+    <section id="calculator-section" class="story-section px-4 sm:px-6 py-16">
+      <div class="max-w-5xl mx-auto w-full story-content-card" id="calculator-container">
+        <!-- Freshness Calculator UI mounts here -->
+      </div>
+    </section>
+
+    <!-- Section 6: "Can I Eat This?" Safety Wizard -->
+    <section id="safety-wizard-section" class="story-section px-4 sm:px-6 py-16">
+      <div class="max-w-5xl mx-auto w-full story-content-card" id="safety-wizard-container">
+        <!-- Safety Wizard UI mounts here -->
+      </div>
+    </section>
+
+    <!-- Section 7: Temperature Danger Zone Simulator -->
+    <section id="danger-zone-section" class="story-section px-4 sm:px-6 py-16">
+      <div class="max-w-5xl mx-auto w-full story-content-card" id="danger-zone-container">
+        <!-- Temperature Simulator UI mounts here -->
+      </div>
+    </section>
+
+    <!-- Section 8: Barcode & Grocery Scanner Simulator -->
+    <section id="scanner-section" class="story-section px-4 sm:px-6 py-16">
+      <div class="max-w-5xl mx-auto w-full story-content-card" id="scanner-container">
+        <!-- Scanner Simulator UI mounts here -->
+      </div>
+    </section>
+
+    <!-- Section 9: My Tracked Pantry & Kitchen Inventory Component -->
+    <section id="my-pantry-section" class="story-section px-4 sm:px-6 py-16">
+      <div class="max-w-6xl mx-auto w-full story-content-card" id="pantry-tracker-container">
+        <!-- Pantry Tracker UI mounts here -->
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="story-content-card bg-obsidian-950 border-t border-white/10 py-12 px-4 sm:px-6 text-slate-400 text-xs">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="space-y-3">
+          <div class="flex items-center gap-2 text-white font-bold font-display text-base">
+            <span>🥛</span> Will It Expire?
+          </div>
+          <p class="text-slate-400 leading-relaxed">
+            An interactive 3D virtual kitchen & food storage intelligence application built to reduce food waste, prevent foodborne illness, and clarify expiration label science.
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <div class="text-white font-semibold uppercase tracking-wider font-mono text-[11px]">Authoritative Data Sources</div>
+          <ul class="space-y-1.5 text-slate-400">
+            <li>• USDA Food Safety and Inspection Service (FSIS)</li>
+            <li>• USDA FoodKeeper Database API</li>
+            <li>• U.S. Food & Drug Administration (FDA)</li>
+            <li>• Cornell University Dept. of Food Science</li>
+          </ul>
+        </div>
+
+        <div class="space-y-2">
+          <div class="text-white font-semibold uppercase tracking-wider font-mono text-[11px]">Built With Modern Web Craft</div>
+          <ul class="space-y-1.5 text-slate-400">
+            <li>• <strong>Three.js</strong> WebGL 3D Graphics Engine</li>
+            <li>• <strong>GSAP & ScrollTrigger</strong> Camera Director</li>
+            <li>• <strong>Tailwind CSS</strong> Dark Obsidian & Bezel Design</li>
+            <li>• <strong>Web Audio API</strong> Procedural Micro-Sounds</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px]">
+        <div>© 2026 Will It Expire? Built for kitchen food safety.</div>
+        <div class="flex items-center gap-4">
+          <span class="text-emerald-400">🌱 Save Food, Save Money, Stay Safe</span>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- 6. Modals & Drawers Containers -->
+  <div id="inspector-modal-container"></div>
+  <div id="database-modal-container"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
