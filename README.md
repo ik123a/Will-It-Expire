@@ -2,11 +2,18 @@
 
 > **A modern 3D WebGL kitchen environment powered by USDA FoodKeeper data to help you know exactly when food expires, prevent foodborne illness, and track household food waste reduction.**
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-will--it--expire.vercel.app-emerald?style=for-the-badge&logo=vercel&logoColor=white)](https://will-it-expire.vercel.app/)
+
 [![Vite](https://img.shields.io/badge/Vite-6.4-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-WebGL-black?style=flat&logo=three.js&logoColor=white)](https://threejs.org/)
 [![GSAP](https://img.shields.io/badge/GSAP-3.14-88CE02?style=flat&logo=greensock&logoColor=white)](https://greensock.com/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
+
+---
+
+## 🌐 Live Production URL
+### 👉 **[https://will-it-expire.vercel.app/](https://will-it-expire.vercel.app/)**
 
 ---
 
