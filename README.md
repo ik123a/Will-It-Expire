@@ -2,7 +2,8 @@
 
 > **A modern 3D WebGL kitchen environment powered by USDA FoodKeeper data to help you know exactly when food expires, prevent foodborne illness, and track household food waste reduction.**
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-will--it--expire.vercel.app-emerald?style=for-the-badge&logo=vercel&logoColor=white)](https://will-it-expire.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-will--it--expire.vercel.app-10B981?style=for-the-badge&logo=vercel&logoColor=white)](https://will-it-expire.vercel.app/)
+[![Vercel Dashboard](https://img.shields.io/badge/Vercel_Dashboard-Project_Status-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/ik123as-projects/will-it-expire)
 
 [![Vite](https://img.shields.io/badge/Vite-6.4-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-WebGL-black?style=flat&logo=three.js&logoColor=white)](https://threejs.org/)
@@ -12,8 +13,13 @@
 
 ---
 
-## 🌐 Live Production URL
-### 👉 **[https://will-it-expire.vercel.app/](https://will-it-expire.vercel.app/)**
+## 🌐 Live Deployments & Links
+
+| Service | Link | Description |
+| :--- | :--- | :--- |
+| 🚀 **Live Web App** | **[will-it-expire.vercel.app](https://will-it-expire.vercel.app/)** | Production 3D Web Platform |
+| ⚡ **Vercel Dashboard** | **[vercel.com/ik123as-projects/will-it-expire](https://vercel.com/ik123as-projects/will-it-expire)** | Deployment Analytics & Project Settings |
+| 📦 **GitHub Repository** | **[github.com/ik123a/Will-It-Expire](https://github.com/ik123a/Will-It-Expire)** | Source Code & Release Tracking |
 
 ---
 
@@ -85,7 +91,7 @@ Track your food inventory in real-time with color-coded freshness progress bars,
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) with custom dark obsidian palette and glassmorphism.
 - **Audio Synthesis**: Native **Web Audio API** procedural sound generator (magnetic door suction, latch thud, drawer slide, hover ticks).
 - **Data Engine**: 100+ USDA FoodKeeper database with multi-field search and freshness calculations.
-- **Build Tool**: [Vite](https://vitejs.dev/) with instantaneous HMR and optimized production bundling.
+- **Deployment**: [Vercel](https://vercel.com/) with automated CI/CD continuous deployment pipeline.
 
 ---
 
