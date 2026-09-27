@@ -1,5 +1,17 @@
 import * as THREE from 'three';
 
+const clamp = (v, lo, hi) => (lo > hi ? (lo + hi) / 2 : Math.min(Math.max(v, lo), hi));
+
+const inflate = (r, by) => ({
+  left: r.left - by,
+  right: r.right + by,
+  top: r.top - by,
+  bottom: r.bottom + by,
+});
+
+const overlaps = (a, b) =>
+  a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+
 /**
  * Manages floating 3D-to-2D screen-space HTML annotations above interactive items.
  */
@@ -10,6 +22,7 @@ export class AnnotationManager {
     this.annotations = [];
     this.tempVec = new THREE.Vector3();
     this.onItemClickCallback = null;
+    this.sizesDirty = true;
   }
 
   init(interactiveItems, onItemClick) {
@@ -49,40 +62,107 @@ export class AnnotationManager {
         element: el,
         object: group,
         offsetY: group.userData.floatOffset || 0.6,
+        w: 0,
+        h: 0,
       });
     });
+
+    this.sizesDirty = true;
+    if (!this.onResize) {
+      this.onResize = () => { this.sizesDirty = true; };
+      window.addEventListener('resize', this.onResize);
+    }
   }
 
   update() {
     if (!this.annotations.length || !this.camera) return;
 
-    const widthHalf = window.innerWidth / 2;
-    const heightHalf = window.innerHeight / 2;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const gap = 10;
+    const margin = 14;
 
-    this.annotations.forEach(({ element, object, offsetY }) => {
-      object.getWorldPosition(this.tempVec);
-      this.tempVec.y += offsetY;
+    this.measure();
 
-      // Project 3D coordinate to Normalized Device Coordinates (-1 to +1)
+    // Obstacles: hero copy plus fixed chrome. Without the chrome, clamping a
+    // far off-screen anchor parks its tag under the header, reading as clipped.
+    const reserved = [];
+    for (const sel of ['.story-content-card', 'header', '#zone-nav']) {
+      const el = document.querySelector(sel);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) continue;
+      if (r.bottom <= 0 || r.top >= vh || r.right <= 0 || r.left >= vw) continue;
+      reserved.push(inflate(r, gap));
+    }
+
+    const candidates = [];
+    for (const ann of this.annotations) {
+      ann.object.getWorldPosition(this.tempVec);
+      this.tempVec.y += ann.offsetY;
       this.tempVec.project(this.camera);
 
-      // Check if item is in front of camera view frustum
       if (this.tempVec.z > 1.0) {
-        element.style.display = 'none';
-        return;
+        ann.element.style.display = 'none';
+        continue;
       }
 
-      const x = (this.tempVec.x * widthHalf) + widthHalf;
-      const y = -(this.tempVec.y * heightHalf) + heightHalf;
+      candidates.push({
+        ann,
+        x: this.tempVec.x * (vw / 2) + vw / 2,
+        y: -(this.tempVec.y * (vh / 2)) + vh / 2,
+        z: this.tempVec.z,
+      });
+    }
 
-      // Check if coordinate is inside screen boundaries
-      if (x < -50 || x > window.innerWidth + 50 || y < -50 || y > window.innerHeight + 50) {
+    // Nearest to camera wins its natural position; the rest step aside.
+    candidates.sort((a, b) => a.z - b.z);
+
+    const placed = reserved.slice();
+    for (const c of candidates) {
+      const { element, w, h } = c.ann;
+      if (!w || !h) {
         element.style.display = 'none';
-      } else {
-        element.style.display = 'flex';
-        element.style.transform = `translate(-50%, -100%) translate3d(${x}px, ${y}px, 0)`;
+        continue;
       }
-    });
+
+      // Clamp using the tag's real size: the old fixed +/-50px test ran before
+      // translate(-50%), so edge tags still overflowed and got clipped.
+      const cx = clamp(c.x, margin + w / 2, vw - margin - w / 2);
+      const step = h + gap;
+
+      let chosen = null;
+      for (let i = 0; i < 7 && !chosen; i++) {
+        for (const sign of i === 0 ? [0] : [-1, 1]) {
+          const cy = clamp(c.y + sign * i * step, margin + h, vh - margin);
+          const rect = { left: cx - w / 2, right: cx + w / 2, top: cy - h, bottom: cy };
+          if (placed.some((p) => overlaps(rect, p))) continue;
+          chosen = { cy, rect };
+          break;
+        }
+      }
+
+      if (!chosen) {
+        element.style.display = 'none';
+        continue;
+      }
+
+      placed.push(chosen.rect);
+      element.style.display = 'flex';
+      element.style.transform =
+        `translate(-50%, -100%) translate3d(${cx}px, ${chosen.cy}px, 0)`;
+    }
+  }
+
+  // Sizes are static per tag, so measure once instead of forcing a layout
+  // read for every tag on every frame.
+  measure() {
+    if (!this.sizesDirty && this.annotations.every((a) => a.w)) return;
+    for (const ann of this.annotations) {
+      ann.w = ann.element.offsetWidth;
+      ann.h = ann.element.offsetHeight;
+    }
+    this.sizesDirty = false;
   }
 
   setVisible(visible) {
