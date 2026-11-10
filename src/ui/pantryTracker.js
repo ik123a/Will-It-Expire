@@ -181,9 +181,9 @@ export class PantryTrackerUI {
       `"${i.storage}"`,
       `"${i.isOpened ? 'Yes' : 'No'}"`,
       `"${i.date}"`,
-      i.calc.daysRemaining,
-      `${i.calc.percentage}%`,
-      `"${i.calc.expiryDate}"`,
+      i.calc.daysRemaining ?? 'Unknown',
+      i.calc.percentage === null ? 'Unknown' : `${i.calc.percentage}%`,
+      `"${i.calc.expiryDate ?? 'Unknown'}"`,
       `"${i.calc.statusText}"`
     ]);
 
@@ -247,11 +247,11 @@ export class PantryTrackerUI {
     if (!this.container) return;
 
     const enrichedItems = this.getEnrichedItems();
-    enrichedItems.sort((a, b) => a.calc.daysRemaining - b.calc.daysRemaining);
+    enrichedItems.sort((a, b) => (a.calc.daysRemaining ?? Infinity) - (b.calc.daysRemaining ?? Infinity));
 
     const totalCount = enrichedItems.length;
     const expiredCount = enrichedItems.filter(i => i.calc.daysRemaining < 0).length;
-    const urgentCount = enrichedItems.filter(i => i.calc.daysRemaining >= 0 && i.calc.daysRemaining <= 3).length;
+    const urgentCount = enrichedItems.filter(i => Number.isFinite(i.calc.daysRemaining) && i.calc.daysRemaining >= 0 && i.calc.daysRemaining <= 3).length;
     const freshCount = enrichedItems.filter(i => i.calc.daysRemaining > 3).length;
 
     this.container.innerHTML = `
@@ -264,7 +264,7 @@ export class PantryTrackerUI {
               <span>🏠</span> Live Virtual Kitchen Inventory
             </div>
             <h3 class="text-2xl font-bold text-white font-display">My Tracked Pantry & Fridge</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Real-time expiration countdowns and spoilage prevention alerts.</p>
+            <p class="text-xs text-slate-400 mt-0.5">Date-based storage estimates, not food-safety verdicts. Invalid dates show Unknown.</p>
           </div>
 
           <!-- Quick Stats Pill Badges -->
@@ -274,15 +274,15 @@ export class PantryTrackerUI {
               <span class="text-sm font-bold text-white font-mono">${totalCount}</span>
             </div>
             <div class="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-center">
-              <span class="text-[10px] text-rose-300 block font-mono">Expired</span>
+              <span class="text-[10px] text-rose-300 block font-mono">Past estimate</span>
               <span class="text-sm font-bold text-rose-400 font-mono">${expiredCount}</span>
             </div>
             <div class="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
-              <span class="text-[10px] text-amber-300 block font-mono">Eat Soon</span>
+              <span class="text-[10px] text-amber-300 block font-mono">Near estimate</span>
               <span class="text-sm font-bold text-amber-400 font-mono">${urgentCount}</span>
             </div>
             <div class="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-              <span class="text-[10px] text-emerald-300 block font-mono">Fresh</span>
+              <span class="text-[10px] text-emerald-300 block font-mono">Within estimate</span>
               <span class="text-sm font-bold text-emerald-400 font-mono">${freshCount}</span>
             </div>
           </div>
@@ -360,23 +360,23 @@ export class PantryTrackerUI {
                     </div>
 
                     <span class="text-[10px] font-mono px-2 py-0.5 rounded-full border ${item.calc.badgeClass}">
-                      ${item.calc.daysRemaining < 0 ? `-${Math.abs(item.calc.daysRemaining)}d past` : `${item.calc.daysRemaining}d left`}
+                      ${item.calc.status === 'unknown' ? 'Unknown' : item.calc.daysRemaining < 0 ? `${Math.abs(item.calc.daysRemaining)}d past estimate` : `${item.calc.daysRemaining}d to estimate`}
                     </span>
                   </div>
 
                   <!-- Freshness Progress Meter -->
                   <div class="mt-4 space-y-1.5">
                     <div class="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                      <span>Freshness</span>
-                      <span class="text-white font-bold">${item.calc.percentage}%</span>
+                      <span>Estimated window left</span>
+                      <span class="text-white font-bold">${item.calc.percentage === null ? 'Unknown' : `${item.calc.percentage}%`}</span>
                     </div>
                     <div class="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                      <div class="h-full rounded-full transition-all duration-500" style="width: ${item.calc.percentage}%; background-color: ${item.calc.color};"></div>
+                      <div class="h-full rounded-full transition-all duration-500" style="width: ${item.calc.percentage ?? 0}%; background-color: ${item.calc.color};"></div>
                     </div>
                   </div>
 
                   <div class="mt-3 text-[11px] text-slate-400 font-mono">
-                    Estimated Expiry: <span class="text-slate-200">${item.calc.expiryDate}</span>
+                    Estimated window end: <span class="text-slate-200">${item.calc.expiryDate ?? 'Unknown'}</span>
                   </div>
                 </div>
 

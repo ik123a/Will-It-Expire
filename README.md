@@ -156,3 +156,13 @@ flowchart LR
 Run `npm test` for timezone and daylight-saving regression checks, and `npm run build` for the Vite bundle. The local audit passed both; the build reports a large JavaScript chunk. No real food was assessed, and this project does not validate pathogen growth, sensory diagnoses, or food-safety outcomes. Data is bundled in `src/data/foodkeeper-data.js`; this audit did not independently validate each record against its cited sources.
 
 The November 2026 repair makes purchase dates use the selected local calendar day, including across daylight-saving changes. To undo it, revert the audit commit. Clearing browser storage removes locally saved pantry entries.
+
+### Date-estimate follow-up
+
+The calculator now returns an explicit unknown result for empty/malformed dates, nonexistent calendar dates, future purchase/opening dates, and missing or unsupported storage durations. Calculator and pantry displays use Unknown instead of NaN or an invented countdown. Unknown records are excluded from date-based summary counts, and an unknown calculator result cannot be saved through its tracking button. Valid dates can be entered again to restore the estimate.
+
+The gauge is the estimated fraction of a bundled duration remaining, not measured freshness or a probability of safety. All calculator countdown states, including the end date and past-window states, are labeled as estimates. Landing/date-label copy no longer promises exact expiry or that food is safe based on a date. Seven helper tests cover invalid inputs, date boundaries and known countdown states; a real-browser smoke checks unknown display, stored invalid pantry data, disabled tracking and recovery to a valid date.
+
+![Unknown estimate from a cleared date input](docs/screenshots/unknown-estimate.png)
+
+This screenshot shows the real local calculator with its date cleared. Browser smoke used a synthetic pantry record with a malformed date. The separate sensory wizard, pathogen descriptions, temperature simulator and bundled storage records have not been independently validated; they remain educational prototype content, not a safety assessment. No food-safety recommendation or new shelf-life inference was added in this follow-up.

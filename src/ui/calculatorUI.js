@@ -27,7 +27,7 @@ export class FreshnessCalculatorUI {
             </div>
             <div>
               <h3 class="text-xl font-bold text-white font-display">Will It Expire? Smart Calculator</h3>
-              <p class="text-xs text-slate-400">Calculate remaining days, freshness percentage, and safe consumption window.</p>
+              <p class="text-xs text-slate-400">Estimate a storage window from a date. This cannot determine food safety.</p>
             </div>
           </div>
         </div>
@@ -99,7 +99,7 @@ export class FreshnessCalculatorUI {
                   </svg>
                   <div class="absolute inset-0 flex flex-col items-center justify-center">
                     <span id="calc-percent-val" class="text-2xl font-bold text-white font-mono">100%</span>
-                    <span class="text-[9px] font-mono uppercase tracking-wider text-slate-400">Freshness</span>
+                    <span class="text-[9px] font-mono uppercase tracking-wider text-slate-400">Window left</span>
                   </div>
                 </div>
 
@@ -108,7 +108,7 @@ export class FreshnessCalculatorUI {
                   <span id="calc-status-badge" class="inline-block text-[11px] font-mono px-2.5 py-0.5 rounded-full border mb-1.5"></span>
                   <h4 id="calc-status-title" class="text-xl font-bold text-white font-display"></h4>
                   <div class="text-xs text-slate-400 mt-1 font-mono">
-                    Estimated Expiry: <span id="calc-expiry-date" class="text-white font-bold"></span>
+                    Estimated window end: <span id="calc-expiry-date" class="text-white font-bold"></span>
                   </div>
                 </div>
 
@@ -117,7 +117,7 @@ export class FreshnessCalculatorUI {
               <!-- Actionable Advice Card -->
               <div class="mt-6 p-4 rounded-xl bg-obsidian-950/60 border border-white/10">
                 <div class="text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
-                  <span>💡</span> Guidance & Food Safety
+                  <span>💡</span> Estimate limits
                 </div>
                 <p id="calc-advice-text" class="text-xs text-slate-400 leading-relaxed"></p>
               </div>
@@ -188,7 +188,7 @@ export class FreshnessCalculatorUI {
     });
 
     savePantryBtn.addEventListener('click', () => {
-      if (this.onAddToPantry && this.selectedFood) {
+      if (!savePantryBtn.disabled && this.onAddToPantry && this.selectedFood) {
         this.onAddToPantry(this.selectedFood, {
           storage: this.selectedStorage,
           isOpened: this.isOpened,
@@ -229,7 +229,8 @@ export class FreshnessCalculatorUI {
 
     // Gauge circle calculation (circumference = 2 * PI * 42 = 263.89)
     const circumference = 264;
-    const offset = circumference - (result.percentage / 100) * circumference;
+    const unknown = result.status === 'unknown';
+    const offset = circumference - ((result.percentage ?? 0) / 100) * circumference;
 
     const gaugeBar = document.getElementById('calc-gauge-bar');
     const percentVal = document.getElementById('calc-percent-val');
@@ -242,21 +243,29 @@ export class FreshnessCalculatorUI {
       gaugeBar.style.strokeDashoffset = offset;
       gaugeBar.style.stroke = result.color;
     }
-    if (percentVal) percentVal.textContent = `${result.percentage}%`;
+    if (percentVal) percentVal.textContent = unknown ? '—' : `${result.percentage}%`;
     if (statusBadge) {
       statusBadge.textContent = result.statusText;
       statusBadge.className = `inline-block text-[11px] font-mono px-2.5 py-0.5 rounded-full border mb-1.5 ${result.badgeClass}`;
     }
     if (statusTitle) {
-      if (result.daysRemaining > 0) {
-        statusTitle.textContent = `${result.daysRemaining} ${result.daysRemaining === 1 ? 'Day' : 'Days'} Remaining`;
+      if (unknown) {
+        statusTitle.textContent = 'Estimate unavailable';
+      } else if (result.daysRemaining > 0) {
+        statusTitle.textContent = `${result.daysRemaining} Estimated ${result.daysRemaining === 1 ? 'Day' : 'Days'} Left`;
       } else if (result.daysRemaining === 0) {
-        statusTitle.textContent = `Expires Today!`;
+        statusTitle.textContent = 'Estimated Window Ends Today';
       } else {
-        statusTitle.textContent = `Expired ${Math.abs(result.daysRemaining)} Days Ago`;
+        statusTitle.textContent = `${Math.abs(result.daysRemaining)} Days Past Estimated Window`;
       }
     }
-    if (expiryDate) expiryDate.textContent = result.expiryDate || 'N/A';
+    if (expiryDate) expiryDate.textContent = result.expiryDate || 'Unknown';
     if (adviceText) adviceText.textContent = result.advice;
+    const saveButton = document.getElementById('calc-save-pantry-btn');
+    if (saveButton) {
+      saveButton.disabled = unknown;
+      saveButton.style.opacity = unknown ? '0.5' : '';
+      saveButton.title = unknown ? 'Enter a valid date and storage choice before tracking.' : '';
+    }
   }
 }
