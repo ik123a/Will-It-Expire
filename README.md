@@ -1,6 +1,6 @@
 # 🥛 Will It Expire? — 3D Interactive Food Freshness & Storage Intelligence
 
-> **A modern 3D WebGL kitchen environment powered by USDA FoodKeeper data to help you know exactly when food expires, prevent foodborne illness, and track household food waste reduction.**
+> **An educational 3D kitchen and local pantry tracker with bundled storage-duration data. Countdown estimates are not a test of food safety or an exact expiration prediction.**
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-will--it--expire.vercel.app-10B981?style=for-the-badge&logo=vercel&logoColor=white)](https://will-it-expire.vercel.app/)
 [![Vercel Dashboard](https://img.shields.io/badge/Vercel_Dashboard-Project_Status-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/ik123as-projects/will-it-expire)
@@ -17,7 +17,7 @@
 
 | Service | Link | Description |
 | :--- | :--- | :--- |
-| 🚀 **Live Web App** | **[will-it-expire.vercel.app](https://will-it-expire.vercel.app/)** | Production 3D Web Platform |
+| 🚀 **Live Web App** | **[will-it-expire.vercel.app](https://will-it-expire.vercel.app/)** | Hosted demo (availability not checked by the local audit) |
 | ⚡ **Vercel Dashboard** | **[vercel.com/ik123as-projects/will-it-expire](https://vercel.com/ik123as-projects/will-it-expire)** | Deployment Analytics & Project Settings |
 | 📦 **GitHub Repository** | **[github.com/ik123a/Will-It-Expire](https://github.com/ik123a/Will-It-Expire)** | Source Code & Release Tracking |
 
@@ -25,7 +25,7 @@
 
 ## 🎬 Application Demo Video & Screen Recording
 
-https://github.com/user-attachments/assets/demo_screenrecording.webm
+[Repository demo recording](docs/media/demo_screenrecording.webm)
 
 > *Watch the video recording above or check `docs/media/demo_screenrecording.webm` for a live walkthrough of the 3D kitchen, animated refrigerator doors, sensory safety wizard, and pantry tracking.*
 
@@ -45,7 +45,7 @@ Explore an interactive 3D kitchen with realistic materials, subway backsplash, m
 ---
 
 ### 2. 🔬 Deep Food Inspector & USDA Spoilage Guide
-Click any food item in the 3D scene or search the database to open the Inspector Drawer with scientific shelf lives, **sensory spoilage checklists (Look / Smell / Touch)**, and microbial pathogen profiles (*Listeria*, *Salmonella*, *E. coli*, *Botulinum*).
+Click any food item in the 3D scene or search the database to open the Inspector Drawer with bundled storage-duration estimates, **sensory spoilage checklists (Look / Smell / Touch)**, and microbial pathogen profiles (*Listeria*, *Salmonella*, *E. coli*, *Botulinum*).
 
 ![Food Inspector Drawer](docs/screenshots/inspector_drawer.png)
 *Figure 3: Whole Milk inspection drawer showing optimal storage, shelf life grid, and microbiological risks.*
@@ -53,7 +53,7 @@ Click any food item in the 3D scene or search the database to open the Inspector
 ---
 
 ### 3. 🩺 "Can I Eat This?" Sensory Diagnostic Decision Tree
-An interactive step-by-step diagnostic tool that evaluates room temperature exposure time (>2 hrs in the Danger Zone), visible mold fuzz, sour/ammonia odors, slime, and bloated cans to give instant FDA/USDA-backed safety verdicts.
+An interactive step-by-step diagnostic tool that evaluates room temperature exposure time (>2 hrs in the Danger Zone), visible mold fuzz, sour/ammonia odors, slime, and bloated cans to give educational rule-based prompts.
 
 ![Safety Wizard](docs/screenshots/safety_wizard.png)
 *Figure 4: Sensory Diagnostic Decision Tree with real-time risk assessment.*
@@ -109,7 +109,7 @@ cd Will-It-Expire
 
 ### 2. Install Dependencies
 ```bash
-npm install
+npm ci --ignore-scripts
 ```
 
 ### 3. Start Development Server
@@ -137,3 +137,32 @@ The optimized production build will be generated in the `dist/` directory.
 
 ## 📄 License
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+## Local verification and limitations
+
+![Local app capture](docs/screenshots/local-audit.png)
+
+Captured from this repository on localhost at 1440×1000 on 2026-11-10, with a fresh browser context and external requests blocked. Pantry entries and savings counters start with demo values; they are not measured household outcomes. The barcode scanner is a simulator. Existing showcase assets are retained as historical project media.
+
+```mermaid
+flowchart LR
+  Data[Bundled food records] --> Scene[Three.js kitchen and search]
+  Data --> Calculator[Calendar-day freshness estimate]
+  Input[Storage, opened state, local purchase date] --> Calculator
+  Calculator --> Pantry[Pantry UI]
+  Pantry <--> Storage[Browser localStorage]
+```
+
+Run `npm test` for timezone and daylight-saving regression checks, and `npm run build` for the Vite bundle. The local audit passed both; the build reports a large JavaScript chunk. No real food was assessed, and this project does not validate pathogen growth, sensory diagnoses, or food-safety outcomes. Data is bundled in `src/data/foodkeeper-data.js`; this audit did not independently validate each record against its cited sources.
+
+The November 2026 repair makes purchase dates use the selected local calendar day, including across daylight-saving changes. To undo it, revert the audit commit. Clearing browser storage removes locally saved pantry entries.
+
+### Date-estimate follow-up
+
+The calculator now returns an explicit unknown result for empty/malformed dates, nonexistent calendar dates, future purchase/opening dates, and missing or unsupported storage durations. Calculator and pantry displays use Unknown instead of NaN or an invented countdown. Unknown records are excluded from date-based summary counts, and an unknown calculator result cannot be saved through its tracking button. Valid dates can be entered again to restore the estimate.
+
+The gauge is the estimated fraction of a bundled duration remaining, not measured freshness or a probability of safety. All calculator countdown states, including the end date and past-window states, are labeled as estimates. Landing/date-label copy no longer promises exact expiry or that food is safe based on a date. Seven helper tests cover invalid inputs, date boundaries and known countdown states; a real-browser smoke checks unknown display, stored invalid pantry data, disabled tracking and recovery to a valid date.
+
+![Unknown estimate from a cleared date input](docs/screenshots/unknown-estimate.png)
+
+This screenshot shows the real local calculator with its date cleared. Browser smoke used a synthetic pantry record with a malformed date. The separate sensory wizard, pathogen descriptions, temperature simulator and bundled storage records have not been independently validated; they remain educational prototype content, not a safety assessment. No food-safety recommendation or new shelf-life inference was added in this follow-up.
