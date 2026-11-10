@@ -1,5 +1,5 @@
 import confetti from 'canvas-confetti';
-import { calculateFreshness } from '../data/calculator.js';
+import { calculateFreshness, localDateString } from '../data/calculator.js';
 import { FOOD_ITEMS, getFoodById } from '../data/foodkeeper-data.js';
 import { sound } from '../audio/sounds.js';
 
@@ -89,7 +89,7 @@ export class PantryTrackerUI {
       foodId: foodItem.id,
       storage: options.storage || foodItem.idealStorage || 'fridge',
       isOpened: options.isOpened || false,
-      date: options.date || new Date().toISOString().split('T')[0],
+      date: options.date || localDateString(),
       customName: options.customName || null,
       customIcon: options.customIcon || null,
     };
@@ -121,7 +121,7 @@ export class PantryTrackerUI {
         foodId: foodItem.id,
         storage: options.storage || foodItem.idealStorage || 'fridge',
         isOpened: options.isOpened || false,
-        date: options.date || new Date().toISOString().split('T')[0],
+        date: options.date || localDateString(),
       };
       this.items.unshift(newItem);
     });
@@ -191,7 +191,7 @@ export class PantryTrackerUI {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `pantry_inventory_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `pantry_inventory_${localDateString()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -202,7 +202,7 @@ export class PantryTrackerUI {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.items, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `pantry_backup_${new Date().toISOString().split('T')[0]}.json`);
+    downloadAnchor.setAttribute('download', `pantry_backup_${localDateString()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();

@@ -1,5 +1,5 @@
 import { FOOD_ITEMS } from '../data/foodkeeper-data.js';
-import { calculateFreshness } from '../data/calculator.js';
+import { calculateFreshness, localDateString } from '../data/calculator.js';
 import { sound } from '../audio/sounds.js';
 
 export class FreshnessCalculatorUI {
@@ -9,7 +9,7 @@ export class FreshnessCalculatorUI {
     this.selectedFood = FOOD_ITEMS[0]; // default whole milk
     this.selectedStorage = 'fridge';
     this.isOpened = false;
-    this.selectedDate = new Date().toISOString().split('T')[0];
+    this.selectedDate = localDateString();
 
     this.init();
   }

@@ -2,17 +2,20 @@
  * Food Freshness and Shelf Life Calculation Engine
  */
 
+export function localDateString(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 export function calculateFreshness({
   item,
   storage = 'fridge', // 'pantry' | 'fridge' | 'freezer'
   isOpened = false,
   dateType = 'purchase', // 'purchase' | 'opened' | 'expiry'
-  selectedDate = new Date().toISOString().split('T')[0], // YYYY-MM-DD
+  selectedDate = localDateString(), // local YYYY-MM-DD
 }) {
   const now = new Date();
-  const inputDate = new Date(selectedDate);
-  // Reset time to start of day for accurate day counting
-  inputDate.setHours(0, 0, 0, 0);
+  const [year, month, day] = selectedDate.split('-').map(Number);
+  const inputDate = new Date(year, month - 1, day);
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   // Determine standard total shelf life based on chosen storage & opened state
@@ -52,7 +55,9 @@ export function calculateFreshness({
   }
 
   // Calculate days passed since the input date
-  const diffTime = today.getTime() - inputDate.getTime();
+  // Compare calendar dates: local midnights can be 23 or 25 hours apart at DST.
+  const diffTime = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+    - Date.UTC(inputDate.getFullYear(), inputDate.getMonth(), inputDate.getDate());
   const daysElapsed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   const daysRemaining = totalAllowedDays - daysElapsed;
 
